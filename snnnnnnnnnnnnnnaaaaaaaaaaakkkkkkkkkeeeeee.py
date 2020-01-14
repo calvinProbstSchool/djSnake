@@ -7,6 +7,22 @@ import pygame.sprite
 import sys
 from pygame.sprite import *
 
+class SnakePart(Sprite):
+    def __init__(self, boardX, boardY, imageFilename, dIn, dOut):
+        Sprite.__init__(self)
+
+
+        self.dirIn = dIn
+        self.dirOut = dOut
+
+        if
+
+        self.image = pygame.image.load(imageFilename)
+        self.rect = self.image.get_rect()
+
+        self.bX = boardX
+        self.bY = boardY
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 0, 255)
