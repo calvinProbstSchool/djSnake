@@ -7,40 +7,6 @@ import pygame.sprite
 import sys
 from pygame.sprite import *
 
-class SnakePart(Sprite):
-    def __init__(self, boardX, boardY, dIn, dOut):
-        Sprite.__init__(self)
-
-        DIRUP = 0.5
-        DIRRIGHT = 1
-        DIRDOWN = -0.5
-        DIRLEFT = -1
-
-        imageFilename = "snake_body_"
-
-        dirIn = dIn
-        dirOut = dOut
-
-        if dirIn == DIRDOWN:
-            imageFilename = imageFilename + "D"
-        elif dirIn == DIRLEFT:
-            imageFilename = imageFilename + "L"
-        elif dirIn == DIRUP:
-            imageFilename = imageFilename + "U"
-        elif dirIn == DIRRIGHT:
-            imageFilename = imageFilename + "R"
-
-        if dirOut == DIRDOWN:
-            imageFilename = imageFilename + "D.png"
-        elif dirOut == DIRLEFT:
-            imageFilename = imageFilename + "L.png"
-        elif dirOut == DIRUP:
-            imageFilename = imageFilename + "U.png"
-        elif dirOut == DIRRIGHT:
-            imageFilename = imageFilename + "R.png"
-
-        return pygame.image.load(imageFilename)
-
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -52,12 +18,14 @@ OGWINSIZE = 500
 WINDOWSIZEX = 500
 WINDOWSIZEY = 500
 BORDER = 0.1
+XBORDER = BORDER * WINDOWSIZEX
+YBORDER = BORDER * WINDOWSIZEY
 BOARDSIZE = 20
 XBOXSIZE = (WINDOWSIZEX * (1 - (BORDER * 2))) / BOARDSIZE
 YBOXSIZE = (WINDOWSIZEY * (1 - (BORDER * 2))) / BOARDSIZE
 FONTSIZE = int(WINDOWSIZEX / 50)
 
-FPS = 30
+FPS = 10
 DIRUP = 0.5
 DIRRIGHT = 1
 DIRDOWN = -0.5
@@ -65,7 +33,7 @@ DIRLEFT = -1
 
 
 def main():
-    global DISPLAYSURF, SNAKEFONT, WINDOWSIZEX, WINDOWSIZEY, BOARDSIZE, BORDER, XBOXSIZE, YBOXSIZE, FONTSIZE, FPSCLOCK, GAMEBOARD, HEADPOS
+    global DISPLAYSURF, SNAKEFONT, WINDOWSIZEX, WINDOWSIZEY, BOARDSIZE, BORDER, XBOXSIZE, YBOXSIZE, FONTSIZE, FPSCLOCK, GAMEBOARD, HEADPOS, XBORDER, YBORDER
 
     pygame.init()
 
@@ -77,8 +45,8 @@ def main():
 
     keyDir = DIRRIGHT
 
-    snekPos = [(BOARDSIZE / 2, BOARDSIZE / 2)]
-    HEADPOS = snekPos
+    snekPos = [((int(BOARDSIZE / 2)) - 1, int(BOARDSIZE / 2) - 1), ((int(BOARDSIZE / 2)) - 1, int(BOARDSIZE / 2)), (int(BOARDSIZE / 2), int(BOARDSIZE / 2))]
+    HEADPOS = (int(BOARDSIZE / 2), int(BOARDSIZE / 2))
 
     GAMEBOARD = []
 
@@ -86,9 +54,9 @@ def main():
         row = []
         for x in range(BOARDSIZE):
             row.append(False)
-        board.append(row)
+        GAMEBOARD.append(row)
 
-    GAMEBOARD[snekPos[1]][snekPos[0]] = True
+    GAMEBOARD[snekPos[0][1]][snekPos[0][0]] = True
 
     while True:
 
@@ -98,27 +66,26 @@ def main():
                 sys.exit()
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    if not keyDir * -1 == DIRLEFT:
-                        keyDir = DIRLEFT
+                    keyDir = DIRLEFT
                 elif event.key == pygame.K_RIGHT:
-                    if not keyDir * -1 == DIRRIGHT:
-                        keyDir = DIRRIGHT
+                    keyDir = DIRRIGHT
                 elif event.key == pygame.K_UP:
-                    if not keyDir * -1 == DIRUP:
-                        keyDir = DIRUP
+                    keyDir = DIRUP
                 elif event.key == pygame.K_DOWN:
-                    if not keyDir * -1 == DIRLEFT:
-                        keyDir = DIRLEFT
+                    keyDir = DIRLEFT
             if event.type == pygame.VIDEORESIZE:
                 DISPLAYSURF = pygame.display.set_mode((event.w, event.h),
                                                   pygame.RESIZABLE)
                 WINDOWSIZEX = event.w
                 WINDOWSIZEY = event.h
 
-                XBOXSIZE = (WINDOWSIZEX * (1 - (BORDER * 2))) / BOARDSIZE
-                YBOXSIZE = (WINDOWSIZEY * (1 - (BORDER * 2))) / BOARDSIZE
+                XBORDER = BORDER * WINDOWSIZEX
+                YBORDER = BORDER * WINDOWSIZEY
 
-        drawGame((0,0), 0, (0, 0))
+                XBOXSIZE = int((WINDOWSIZEX * (1 - (BORDER * 2))) / BOARDSIZE)
+                YBOXSIZE = int((WINDOWSIZEY * (1 - (BORDER * 2))) / BOARDSIZE)
+
+        drawGame(snekPos, 0, (0, 0))
 
         newSquare = getBoxInDir(HEADPOS[0], HEADPOS[1], keyDir)
         if newSquare[1] == -1 or newSquare[0] == -1:
@@ -132,7 +99,8 @@ def main():
 
 
 def gameLose():
-
+    print("loser")
+    exit()
 
 
 def getBoxInDir(x, y, dir):
@@ -154,18 +122,85 @@ def getBoxInDir(x, y, dir):
     return (xnew, ynew)
 
 
+def getSnakeImage(dIn, dOut, head=False):
+    imageFilename = "snake_body_"
+    if head:
+        imageFilename = "snake_head_"
+
+    dirIn = dIn
+    dirOut = dOut
+
+    if dirIn == DIRDOWN:
+        imageFilename = imageFilename + "D"
+    elif dirIn == DIRLEFT:
+        imageFilename = imageFilename + "L"
+    elif dirIn == DIRUP:
+        imageFilename = imageFilename + "U"
+    elif dirIn == DIRRIGHT:
+        imageFilename = imageFilename + "R"
+
+    if dirOut == DIRDOWN:
+        imageFilename = imageFilename + "D.png"
+    elif dirOut == DIRLEFT:
+        imageFilename = imageFilename + "L.png"
+    elif dirOut == DIRUP:
+        imageFilename = imageFilename + "U.png"
+    elif dirOut == DIRRIGHT:
+        imageFilename = imageFilename + "R.png"
+
+    return pygame.image.load(imageFilename)
+
+
+def getDirBoxes(box, relBox):
+    global DIRLEFT, DIRRIGHT, DIRDOWN, DIRUP
+    if relBox[0] > box[0]:
+        return DIRRIGHT
+    elif relBox[1] > box[1]:
+        return DIRDOWN
+    elif relBox[0] < box[0]:
+        return DIRLEFT
+    elif relBox[1] < box[1]:
+        return DIRUP
+
+
 def drawGame(snekPoss, score, aaplPos):
-    global DISPLAYSURF, SNAKEFONT, FPSCLOCK, FPS, HEADPOS, OGWINSIZE, WINDOWSIZEX, WINDOWSIZEY, BORDER, SNAKEFONT, YBOXSIZE, XBOXSIZE
+    global DISPLAYSURF, SNAKEFONT, FPSCLOCK, FPS, OGWINSIZE, WINDOWSIZEX, WINDOWSIZEY, BORDER, SNAKEFONT, YBOXSIZE, XBOXSIZE, XBORDER, YBORDER
 
     pygame.draw.rect(DISPLAYSURF, GREEN, (((WINDOWSIZEX * BORDER), (WINDOWSIZEY * BORDER)), ((WINDOWSIZEX * (1 - BORDER * 2)), (WINDOWSIZEY * (1 - BORDER * 2)))))
 
-    pygame.display.update()
-    FPSCLOCK.tick(FPS)
-
     DISPLAYSURF.fill(BLACK)
+
 
     for i in range(len(snekPoss)):
         if i == 0:
-            pygame.draw
+            d = getDirBoxes(snekPoss[i], snekPoss[i + 1])
+
+            snekImage = getSnakeImage(d, d)
+
+        elif i == len(snekPoss) - 1:
+            d = getDirBoxes(snekPoss[i], snekPoss[i - 1])
+
+            snekImage = getSnakeImage(d, d, True)
+        else:
+            dIn = getDirBoxes(snekPoss[i], snekPoss[i - 1])
+            dOut = getDirBoxes(snekPoss[i], snekPoss[i + 1])
+
+            snekImage = getSnakeImage(dIn, dOut)
+
+        snekImage = pygame.transform.scale(snekImage, (XBOXSIZE, YBOXSIZE))
+
+        xCoord = XBORDER + (XBOXSIZE * snekPoss[i][0])
+
+        yCoord = YBORDER + (YBOXSIZE * snekPoss[i][1])
+
+        print(str(snekPoss[i][0]) + ", " + str(snekPoss[i][1]))
+
+        DISPLAYSURF.blit(snekImage, (xCoord, yCoord))
+
+
+    snekPoss.remove(snekPoss[0])
+
+    pygame.display.update()
+    FPSCLOCK.tick(FPS)
 
 main()
