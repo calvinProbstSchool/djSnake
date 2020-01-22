@@ -6,11 +6,12 @@ import pygame
 import pygame.sprite
 import sys
 from pygame.sprite import *
+import random
 
 
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
+BGBG = (50, 163, 105)
+GREEN = (26, 154, 168)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 
@@ -33,7 +34,7 @@ DIRLEFT = -1
 
 
 def main():
-    global DISPLAYSURF, SNAKEFONT, WINDOWSIZEX, WINDOWSIZEY, BOARDSIZE, BORDER, XBOXSIZE, YBOXSIZE, FONTSIZE, FPSCLOCK, GAMEBOARD, HEADPOS, XBORDER, YBORDER
+    global DISPLAYSURF, SNAKEFONT, WINDOWSIZEX, WINDOWSIZEY, BOARDSIZE, BORDER, XBOXSIZE, YBOXSIZE, FONTSIZE, FPSCLOCK, GAMEBOARD, HEADPOS, XBORDER, YBORDER, APPLEPOS
 
     pygame.init()
 
@@ -45,8 +46,11 @@ def main():
 
     keyDir = DIRRIGHT
 
+    movingInDir = DIRRIGHT
+
     snekPos = [((int(BOARDSIZE / 2)) - 1, int(BOARDSIZE / 2) - 1), ((int(BOARDSIZE / 2)) - 1, int(BOARDSIZE / 2)), (int(BOARDSIZE / 2), int(BOARDSIZE / 2))]
     HEADPOS = (int(BOARDSIZE / 2), int(BOARDSIZE / 2))
+    APPLEPOS = (random.randint(0, 19), random.randint(0, 19))
 
     GAMEBOARD = []
 
@@ -56,7 +60,8 @@ def main():
             row.append(False)
         GAMEBOARD.append(row)
 
-    GAMEBOARD[snekPos[0][1]][snekPos[0][0]] = True
+    for point in snekPos:
+        GAMEBOARD[point[1]][point[0]] = True
 
     while True:
 
@@ -66,13 +71,17 @@ def main():
                 sys.exit()
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    keyDir = DIRLEFT
+                    if not keyDir == DIRRIGHT:
+                        movingInDir = DIRLEFT
                 elif event.key == pygame.K_RIGHT:
-                    keyDir = DIRRIGHT
+                    if not keyDir == DIRLEFT:
+                        movingInDir = DIRRIGHT
                 elif event.key == pygame.K_UP:
-                    keyDir = DIRUP
+                    if not keyDir == DIRDOWN:
+                        movingInDir = DIRUP
                 elif event.key == pygame.K_DOWN:
-                    keyDir = DIRLEFT
+                    if not keyDir == DIRUP:
+                        movingInDir = DIRDOWN
             if event.type == pygame.VIDEORESIZE:
                 DISPLAYSURF = pygame.display.set_mode((event.w, event.h),
                                                   pygame.RESIZABLE)
@@ -85,9 +94,9 @@ def main():
                 XBOXSIZE = int((WINDOWSIZEX * (1 - (BORDER * 2))) / BOARDSIZE)
                 YBOXSIZE = int((WINDOWSIZEY * (1 - (BORDER * 2))) / BOARDSIZE)
 
-        drawGame(snekPos, 0, (0, 0))
+        drawGame(snekPos, 0)
 
-        newSquare = getBoxInDir(HEADPOS[0], HEADPOS[1], keyDir)
+        newSquare = getBoxInDir(HEADPOS[0], HEADPOS[1], movingInDir)
         if newSquare[1] == -1 or newSquare[0] == -1:
             gameLose()
         elif GAMEBOARD[newSquare[1]][newSquare[0]]:
@@ -96,6 +105,12 @@ def main():
             GAMEBOARD[newSquare[1]][newSquare[0]] = True
             HEADPOS = newSquare
             snekPos.append(HEADPOS)
+
+        GAMEBOARD[snekPos[0][1]][snekPos[0][0]] = False
+
+        keyDir = movingInDir
+
+        snekPos.remove(snekPos[0])
 
 
 def gameLose():
@@ -117,8 +132,10 @@ def getBoxInDir(x, y, dir):
         xnew = xnew + 1
     elif dir == DIRLEFT:
         xnew = xnew - 1
-    if (xnew < 0 or ynew < 0) or (xnew >= BOARDSIZE or ynew >= BOARDSIZE):
-        return (-1, -1)
+    if xnew < 0 or xnew >= BOARDSIZE:
+        return (-1, ynew)
+    if ynew < 0 or ynew >= BOARDSIZE:
+        return (xnew, -1)
     return (xnew, ynew)
 
 
@@ -163,13 +180,23 @@ def getDirBoxes(box, relBox):
         return DIRUP
 
 
-def drawGame(snekPoss, score, aaplPos):
-    global DISPLAYSURF, SNAKEFONT, FPSCLOCK, FPS, OGWINSIZE, WINDOWSIZEX, WINDOWSIZEY, BORDER, SNAKEFONT, YBOXSIZE, XBOXSIZE, XBORDER, YBORDER
+def drawGame(snekPoss, score):
+    global DISPLAYSURF, SNAKEFONT, FPSCLOCK, FPS, OGWINSIZE, WINDOWSIZEX, WINDOWSIZEY, BORDER, SNAKEFONT, YBOXSIZE, XBOXSIZE, XBORDER, YBORDER, APPLEPOS
 
-    pygame.draw.rect(DISPLAYSURF, GREEN, (((WINDOWSIZEX * BORDER), (WINDOWSIZEY * BORDER)), ((WINDOWSIZEX * (1 - BORDER * 2)), (WINDOWSIZEY * (1 - BORDER * 2)))))
+    DISPLAYSURF.fill(BGBG)
 
-    DISPLAYSURF.fill(BLACK)
+    pygame.draw.rect(DISPLAYSURF, GREEN,
+                     (XBORDER, YBORDER, (WINDOWSIZEX - (2 * XBORDER)), (WINDOWSIZEY - (2 * YBORDER))))
 
+    glassMeal = pygame.image.load("sanekFood.png")
+
+    glassMeal = pygame.transform.scale(glassMeal, (XBOXSIZE, YBOXSIZE))
+
+    xCoordApple = XBORDER + (XBOXSIZE * APPLEPOS[0])
+
+    yCoordApple = YBORDER + (YBOXSIZE * APPLEPOS[1])
+
+    DISPLAYSURF.blit(glassMeal, (xCoordApple, yCoordApple))
 
     for i in range(len(snekPoss)):
         if i == 0:
@@ -196,9 +223,6 @@ def drawGame(snekPoss, score, aaplPos):
         print(str(snekPoss[i][0]) + ", " + str(snekPoss[i][1]))
 
         DISPLAYSURF.blit(snekImage, (xCoord, yCoord))
-
-
-    snekPoss.remove(snekPoss[0])
 
     pygame.display.update()
     FPSCLOCK.tick(FPS)
