@@ -109,8 +109,11 @@ def main():
         GAMEBOARD[snekPos[0][1]][snekPos[0][0]] = False
 
         keyDir = movingInDir
+        if not newSquare == APPLEPOS:
+            snekPos.remove(snekPos[0])
+        else:
+            APPLEPOS = (random.randint(0, 19), random.randint(0, 19))
 
-        snekPos.remove(snekPos[0])
 
 
 def gameLose():
